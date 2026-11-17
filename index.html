@@ -46,18 +46,18 @@ header.top h1 small{font-weight:500;color:var(--muted);font-size:.95rem;margin-l
 @media (max-width:900px){.minis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .mini{height:190px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 
-.summary{margin-top:16px}
-.summary-grid{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
-@media (max-width:700px){.summary-grid{grid-template-columns:minmax(0,1fr)}}
-.summary h3{margin:0 0 6px;font-size:.95rem;color:var(--accent)}
-.summary ul{margin:0;padding-left:1.1em}
-.summary li{margin-bottom:4px}
+.news{margin-top:16px}
+.news-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.news-grid{display:grid;gap:20px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:700px){.news-grid{grid-template-columns:minmax(0,1fr)}}
+.news h3{margin:0 0 6px;font-size:.95rem;color:var(--accent)}
+.news ul{margin:0;padding-left:1.1em}
+.news li{margin-bottom:6px}
+.news .src{color:var(--muted);font-size:.8rem;margin-left:4px}
+.news a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.news a:hover{text-decoration-color:var(--accent)}
 .empty{background:var(--accent-soft);border-radius:8px;padding:14px;color:var(--ink);font-size:.92rem}
 #sumUpdated{color:var(--muted);font-size:.82rem;font-weight:400;margin-left:6px}
-
-.lower{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px}
-@media (max-width:1000px){.lower{grid-template-columns:minmax(0,1fr)}}
-.feed{height:520px}
 footer{margin-top:28px;color:var(--muted);font-size:.8rem}
 </style>
 </head>
@@ -73,18 +73,19 @@ footer{margin-top:28px;color:var(--muted);font-size:.8rem}
   <div class="grid">
     <section class="panel" aria-labelledby="chartTitle">
       <h2 id="chartTitle">차트</h2>
-      <div class="tabs" role="group" aria-label="종목 선택">
-        <button data-sym="AMEX:SOXL" aria-pressed="true">SOXL</button>
-        <button data-sym="NASDAQ:SOXX">반도체 (SOXX)</button>
+      <div class="tabs" id="chartTabs" role="group" aria-label="종목 선택">
+        <button data-sym="AMEX:SOXL" aria-pressed="true">SOXL (반도체 3배)</button>
+        <button data-sym="NASDAQ:SOXX">반도체 ETF (SOXX)</button>
         <button data-sym="NASDAQ:QQQ">나스닥100 (QQQ)</button>
         <button data-sym="AMEX:SPY">S&amp;P500 (SPY)</button>
       </div>
       <div id="mainChart"></div>
-      <p class="note">차트 왼쪽 위 종목명을 눌러 다른 심볼(예: SPX, SOX)도 검색할 수 있습니다.</p>
+      <p class="note">일봉 기준 차트입니다. 위쪽 기간 버튼으로 1일~전체 기간을 바꿀 수 있고, 차트 왼쪽 위 종목명을 눌러 다른 종목(예: SPX, SOX)을 검색할 수 있습니다.</p>
     </section>
 
     <section class="panel" aria-labelledby="calTitle">
       <h2 id="calTitle">미국 경제 일정</h2>
+      <p class="note" style="margin:0 0 8px">금리 결정, 물가(CPI), 고용 등 주요 지표 발표 일정입니다. 중요도 중간 이상만 표시합니다.</p>
       <div id="calendar" style="height:560px"></div>
     </section>
   </div>
@@ -95,21 +96,23 @@ footer{margin-top:28px;color:var(--muted);font-size:.8rem}
     <div class="mini" id="mini3"></div>
     <div class="mini" id="mini4"></div>
   </div>
+  <p class="note" style="color:var(--muted);font-size:.82rem;margin:6px 2px 0">왼쪽부터 SOXL(반도체 3배 레버리지), SOXX(반도체 ETF), QQQ(나스닥100 추종), SPY(S&amp;P500 추종)의 최근 3개월 흐름입니다.</p>
 
-  <section class="panel summary" aria-labelledby="sumTitle">
-    <h2 id="sumTitle">오늘의 요약<span id="sumUpdated"></span></h2>
-    <div id="summaryBody">
-      <div class="empty">아직 요약이 없습니다. summary.json 파일이 올라오면 여기에 경제 뉴스, 경제 동향, 반도체 이슈, 전망이 표시됩니다.</div>
+  <section class="panel news" aria-labelledby="newsTitle">
+    <div class="news-head">
+      <h2 id="newsTitle">뉴스 요약<span id="sumUpdated"></span></h2>
+      <div class="tabs" id="newsTabs" role="group" aria-label="보기 선택">
+        <button data-view="sum" aria-pressed="true">한글 요약</button>
+        <button data-view="links" aria-pressed="false">원문 링크</button>
+      </div>
     </div>
+    <div id="newsBody">
+      <div class="empty">아직 요약이 없습니다. 자동 요약이 설정되면 하루 두 번 미국 증시, 경제 동향, 반도체 업계 뉴스와 전망이 한글로 정리됩니다.</div>
+    </div>
+    <p class="note">요약은 각 기사의 제목을 바탕으로 AI가 작성합니다. 세부 내용은 원문 링크 탭에서 확인하세요.</p>
   </section>
 
-  <div class="lower">
-    <section class="panel"><h2>시장 뉴스</h2><div class="feed" id="newsMarket"></div></section>
-    <section class="panel"><h2>SOXL 관련 뉴스</h2><div class="feed" id="newsSoxl"></div></section>
-    <section class="panel"><h2>엔비디아 뉴스</h2><div class="feed" id="newsNvda"></div></section>
-  </div>
-
-  <footer>시세·차트·뉴스·일정: TradingView 위젯. 투자 판단의 근거가 아닌 참고용 화면입니다.</footer>
+  <footer>시세·차트·일정은 TradingView, 뉴스는 Google 뉴스 RSS, 요약은 AI(GitHub Models)가 작성합니다. 투자 판단의 근거가 아닌 참고용 화면입니다.</footer>
 </div>
 
 <script>
@@ -148,14 +151,14 @@ footer{margin-top:28px;color:var(--muted);font-size:.8rem}
   tv(document.getElementById('tape'), 'embed-widget-ticker-tape.js', {
     symbols:[
       {proName:'AMEX:SOXL', title:'SOXL'},
-      {proName:'NASDAQ:SOXX', title:'SOXX'},
-      {proName:'NASDAQ:QQQ', title:'QQQ'},
-      {proName:'AMEX:SPY', title:'SPY'},
-      {proName:'NASDAQ:NVDA', title:'NVDA'},
+      {proName:'NASDAQ:SOXX', title:'반도체 ETF'},
+      {proName:'NASDAQ:QQQ', title:'나스닥100'},
+      {proName:'AMEX:SPY', title:'S&P500'},
+      {proName:'NASDAQ:NVDA', title:'엔비디아'},
       {proName:'NASDAQ:AMD', title:'AMD'},
-      {proName:'NASDAQ:AVGO', title:'AVGO'},
-      {proName:'NASDAQ:MU', title:'MU'},
-      {proName:'NYSE:TSM', title:'TSM'}
+      {proName:'NASDAQ:AVGO', title:'브로드컴'},
+      {proName:'NASDAQ:MU', title:'마이크론'},
+      {proName:'NYSE:TSM', title:'TSMC'}
     ],
     showSymbolLogo:true, isTransparent:true, displayMode:'adaptive',
     colorTheme:theme, locale:LOCALE
@@ -171,9 +174,9 @@ footer{margin-top:28px;color:var(--muted);font-size:.8rem}
       support_host:'https://www.tradingview.com'
     });
   }
-  document.querySelectorAll('.tabs button').forEach(btn=>{
+  document.querySelectorAll('#chartTabs button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed','false'));
+      document.querySelectorAll('#chartTabs button').forEach(b=>b.setAttribute('aria-pressed','false'));
       btn.setAttribute('aria-pressed','true');
       drawChart(btn.dataset.sym);
     });
@@ -194,39 +197,53 @@ footer{margin-top:28px;color:var(--muted);font-size:.8rem}
     locale:LOCALE, importanceFilter:'0,1', countryFilter:'us'
   });
 
-  // 뉴스 피드
-  tv(document.getElementById('newsMarket'), 'embed-widget-timeline.js', {
-    feedMode:'market', market:'stock', isTransparent:true, displayMode:'regular',
-    width:'100%', height:'100%', colorTheme:theme, locale:LOCALE
-  });
-  tv(document.getElementById('newsSoxl'), 'embed-widget-timeline.js', {
-    feedMode:'symbol', symbol:'AMEX:SOXL', isTransparent:true, displayMode:'regular',
-    width:'100%', height:'100%', colorTheme:theme, locale:LOCALE
-  });
-  tv(document.getElementById('newsNvda'), 'embed-widget-timeline.js', {
-    feedMode:'symbol', symbol:'NASDAQ:NVDA', isTransparent:true, displayMode:'regular',
-    width:'100%', height:'100%', colorTheme:theme, locale:LOCALE
+  // 뉴스 요약 (summary.json)
+  const GROUPS = [['market','미국 증시'],['macro','경제 동향'],['semis','반도체 업계'],['outlook','전망']];
+  const body = document.getElementById('newsBody');
+  let news = null, view = 'sum';
+
+  function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+
+  function render(){
+    if(!news) return;
+    body.innerHTML = '';
+    const grid = el('div','news-grid');
+    GROUPS.forEach(([key,label])=>{
+      if(view==='links' && key==='outlook') return;
+      const items = Array.isArray(news[key]) ? news[key] : [];
+      if(!items.length) return;
+      const sec = el('div'); sec.appendChild(el('h3',null,label));
+      const ul = el('ul');
+      items.forEach(it=>{
+        const li = el('li');
+        if(key==='outlook'){ li.textContent = it; }
+        else if(view==='sum'){ li.appendChild(document.createTextNode(it.ko||'')); if(it.source) li.appendChild(el('span','src',it.source)); }
+        else {
+          if(typeof it.url==='string' && it.url.startsWith('https://')){
+            const a = el('a',null,it.title||it.url); a.href=it.url; a.target='_blank'; a.rel='noopener noreferrer'; li.appendChild(a);
+          } else { li.textContent = it.title||''; }
+          if(it.source) li.appendChild(el('span','src',it.source));
+        }
+        ul.appendChild(li);
+      });
+      sec.appendChild(ul); grid.appendChild(sec);
+    });
+    body.appendChild(grid);
+  }
+
+  document.querySelectorAll('#newsTabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#newsTabs button').forEach(b=>b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      view = btn.dataset.view; render();
+    });
   });
 
-  // 요약 (summary.json이 있을 때만 표시)
-  const SECTIONS = [['news','경제 뉴스'],['macro','경제 동향'],['semis','반도체 업계 이슈'],['outlook','전망']];
   fetch('summary.json', {cache:'no-store'})
     .then(r => r.ok ? r.json() : null)
     .then(data => {
       if(!data) return;
-      const body = document.getElementById('summaryBody');
-      body.innerHTML = '';
-      const grid = document.createElement('div'); grid.className = 'summary-grid';
-      SECTIONS.forEach(([key,label])=>{
-        const items = Array.isArray(data[key]) ? data[key] : [];
-        if(!items.length) return;
-        const sec = document.createElement('div');
-        const h = document.createElement('h3'); h.textContent = label; sec.appendChild(h);
-        const ul = document.createElement('ul');
-        items.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
-        sec.appendChild(ul); grid.appendChild(sec);
-      });
-      body.appendChild(grid);
+      news = data; render();
       if(data.updated) document.getElementById('sumUpdated').textContent = '· ' + data.updated + ' 기준';
     })
     .catch(()=>{});
