@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOXL 데스크 · 미국 증시 한눈에</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#EEF1F5; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6675; --line:#D5DBE3;
+  --accent:#2F5DA8; --accent-soft:#E3EBF7; --up:#1E8E5A; --down:#C8443A;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121821; --panel:#1A2230; --ink:#E6EBF2; --muted:#93A0B2; --line:#2B3647;
+    --accent:#7FA6E8; --accent-soft:#223350; color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:20px 16px 48px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+header.top h1{margin:0;font-size:1.6rem;font-weight:800;letter-spacing:-0.02em}
+header.top h1 small{font-weight:500;color:var(--muted);font-size:.95rem;margin-left:8px}
+#clock{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.9rem}
+.tape{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:20px;min-height:46px}
+
+.grid{display:grid;gap:16px;grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel h2{margin:0 0 10px;font-size:1.05rem;font-weight:700}
+.panel .note{color:var(--muted);font-size:.82rem;margin:6px 0 0}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:transparent;color:var(--ink);
+  padding:6px 12px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#mainChart{height:520px}
+@media (max-width:600px){#mainChart{height:400px}}
+
+.minis{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:16px}
+@media (max-width:900px){.minis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mini{height:190px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+
+.summary{margin-top:16px}
+.summary-grid{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:700px){.summary-grid{grid-template-columns:minmax(0,1fr)}}
+.summary h3{margin:0 0 6px;font-size:.95rem;color:var(--accent)}
+.summary ul{margin:0;padding-left:1.1em}
+.summary li{margin-bottom:4px}
+.empty{background:var(--accent-soft);border-radius:8px;padding:14px;color:var(--ink);font-size:.92rem}
+#sumUpdated{color:var(--muted);font-size:.82rem;font-weight:400;margin-left:6px}
+
+.lower{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:16px}
+@media (max-width:1000px){.lower{grid-template-columns:minmax(0,1fr)}}
+.feed{height:520px}
+footer{margin-top:28px;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>SOXL 데스크<small>미국 증시 · 반도체</small></h1>
+    <div id="clock"></div>
+  </header>
+
+  <div class="tape" id="tape"></div>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="chartTitle">
+      <h2 id="chartTitle">차트</h2>
+      <div class="tabs" role="group" aria-label="종목 선택">
+        <button data-sym="AMEX:SOXL" aria-pressed="true">SOXL</button>
+        <button data-sym="NASDAQ:SOXX">반도체 (SOXX)</button>
+        <button data-sym="NASDAQ:QQQ">나스닥100 (QQQ)</button>
+        <button data-sym="AMEX:SPY">S&amp;P500 (SPY)</button>
+      </div>
+      <div id="mainChart"></div>
+      <p class="note">차트 왼쪽 위 종목명을 눌러 다른 심볼(예: SPX, SOX)도 검색할 수 있습니다.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="calTitle">
+      <h2 id="calTitle">미국 경제 일정</h2>
+      <div id="calendar" style="height:560px"></div>
+    </section>
+  </div>
+
+  <div class="minis">
+    <div class="mini" id="mini1"></div>
+    <div class="mini" id="mini2"></div>
+    <div class="mini" id="mini3"></div>
+    <div class="mini" id="mini4"></div>
+  </div>
+
+  <section class="panel summary" aria-labelledby="sumTitle">
+    <h2 id="sumTitle">오늘의 요약<span id="sumUpdated"></span></h2>
+    <div id="summaryBody">
+      <div class="empty">아직 요약이 없습니다. summary.json 파일이 올라오면 여기에 경제 뉴스, 경제 동향, 반도체 이슈, 전망이 표시됩니다.</div>
+    </div>
+  </section>
+
+  <div class="lower">
+    <section class="panel"><h2>시장 뉴스</h2><div class="feed" id="newsMarket"></div></section>
+    <section class="panel"><h2>SOXL 관련 뉴스</h2><div class="feed" id="newsSoxl"></div></section>
+    <section class="panel"><h2>엔비디아 뉴스</h2><div class="feed" id="newsNvda"></div></section>
+  </div>
+
+  <footer>시세·차트·뉴스·일정: TradingView 위젯. 투자 판단의 근거가 아닌 참고용 화면입니다.</footer>
+</div>
+
+<script>
+(function(){
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = dark ? 'dark' : 'light';
+  const LOCALE = 'kr';
+  const BASE = 'https://s3.tradingview.com/external-embedding/';
+
+  function tv(el, file, cfg){
+    el.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'tradingview-widget-container';
+    box.style.height = '100%'; box.style.width = '100%';
+    const inner = document.createElement('div');
+    inner.className = 'tradingview-widget-container__widget';
+    inner.style.height = '100%'; inner.style.width = '100%';
+    box.appendChild(inner);
+    const s = document.createElement('script');
+    s.src = BASE + file; s.async = true;
+    s.innerHTML = JSON.stringify(cfg);
+    box.appendChild(s);
+    el.appendChild(box);
+  }
+
+  // 시계 (뉴욕 / 서울)
+  const clock = document.getElementById('clock');
+  function tick(){
+    const now = new Date();
+    const f = tz => now.toLocaleString('ko-KR',{timeZone:tz,month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+    clock.textContent = '뉴욕 ' + f('America/New_York') + '   서울 ' + f('Asia/Seoul');
+  }
+  tick(); setInterval(tick, 30000);
+
+  // 티커 테이프
+  tv(document.getElementById('tape'), 'embed-widget-ticker-tape.js', {
+    symbols:[
+      {proName:'AMEX:SOXL', title:'SOXL'},
+      {proName:'NASDAQ:SOXX', title:'SOXX'},
+      {proName:'NASDAQ:QQQ', title:'QQQ'},
+      {proName:'AMEX:SPY', title:'SPY'},
+      {proName:'NASDAQ:NVDA', title:'NVDA'},
+      {proName:'NASDAQ:AMD', title:'AMD'},
+      {proName:'NASDAQ:AVGO', title:'AVGO'},
+      {proName:'NASDAQ:MU', title:'MU'},
+      {proName:'NYSE:TSM', title:'TSM'}
+    ],
+    showSymbolLogo:true, isTransparent:true, displayMode:'adaptive',
+    colorTheme:theme, locale:LOCALE
+  });
+
+  // 메인 차트
+  const chartEl = document.getElementById('mainChart');
+  function drawChart(sym){
+    tv(chartEl, 'embed-widget-advanced-chart.js', {
+      autosize:true, symbol:sym, interval:'D', timezone:'Asia/Seoul',
+      theme:theme, style:'1', locale:LOCALE, withdateranges:true,
+      allow_symbol_change:true, save_image:false, calendar:false,
+      support_host:'https://www.tradingview.com'
+    });
+  }
+  document.querySelectorAll('.tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      drawChart(btn.dataset.sym);
+    });
+  });
+  drawChart('AMEX:SOXL');
+
+  // 미니 차트 4개
+  [['mini1','AMEX:SOXL'],['mini2','NASDAQ:SOXX'],['mini3','NASDAQ:QQQ'],['mini4','AMEX:SPY']].forEach(([id,sym])=>{
+    tv(document.getElementById(id), 'embed-widget-mini-symbol-overview.js', {
+      symbol:sym, width:'100%', height:'100%', locale:LOCALE, dateRange:'3M',
+      colorTheme:theme, isTransparent:true, autosize:true
+    });
+  });
+
+  // 경제 일정 (미국)
+  tv(document.getElementById('calendar'), 'embed-widget-events.js', {
+    colorTheme:theme, isTransparent:true, width:'100%', height:'100%',
+    locale:LOCALE, importanceFilter:'0,1', countryFilter:'us'
+  });
+
+  // 뉴스 피드
+  tv(document.getElementById('newsMarket'), 'embed-widget-timeline.js', {
+    feedMode:'market', market:'stock', isTransparent:true, displayMode:'regular',
+    width:'100%', height:'100%', colorTheme:theme, locale:LOCALE
+  });
+  tv(document.getElementById('newsSoxl'), 'embed-widget-timeline.js', {
+    feedMode:'symbol', symbol:'AMEX:SOXL', isTransparent:true, displayMode:'regular',
+    width:'100%', height:'100%', colorTheme:theme, locale:LOCALE
+  });
+  tv(document.getElementById('newsNvda'), 'embed-widget-timeline.js', {
+    feedMode:'symbol', symbol:'NASDAQ:NVDA', isTransparent:true, displayMode:'regular',
+    width:'100%', height:'100%', colorTheme:theme, locale:LOCALE
+  });
+
+  // 요약 (summary.json이 있을 때만 표시)
+  const SECTIONS = [['news','경제 뉴스'],['macro','경제 동향'],['semis','반도체 업계 이슈'],['outlook','전망']];
+  fetch('summary.json', {cache:'no-store'})
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if(!data) return;
+      const body = document.getElementById('summaryBody');
+      body.innerHTML = '';
+      const grid = document.createElement('div'); grid.className = 'summary-grid';
+      SECTIONS.forEach(([key,label])=>{
+        const items = Array.isArray(data[key]) ? data[key] : [];
+        if(!items.length) return;
+        const sec = document.createElement('div');
+        const h = document.createElement('h3'); h.textContent = label; sec.appendChild(h);
+        const ul = document.createElement('ul');
+        items.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
+        sec.appendChild(ul); grid.appendChild(sec);
+      });
+      body.appendChild(grid);
+      if(data.updated) document.getElementById('sumUpdated').textContent = '· ' + data.updated + ' 기준';
+    })
+    .catch(()=>{});
+})();
+</script>
+</body>
+</html>
